@@ -7,9 +7,12 @@ import com.example.storeapi.service.ProductService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Objects;
 
 @Service
 public class ProductServiceImpl implements ProductService {
@@ -33,6 +36,13 @@ public class ProductServiceImpl implements ProductService {
     public Product getProduct(String productId) {
         logger.info("[Product] Retrieving products with product ID: {}", productId);
 
+        // Validate Product ID
+        if (Objects.isNull(productId)) {
+            String error = "Product ID Not Found";
+            logger.error(error);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, error);
+        }
+
         // Get the product from DB
         return productRepository.getProduct(productId);
     }
@@ -44,6 +54,12 @@ public class ProductServiceImpl implements ProductService {
         // Get price for each products
         for(OrderProduct orderProduct : order) {
 
+            if (Objects.isNull(orderProduct.getProductId())) {
+                String error = "Product ID not found. ";
+                logger.error(error);
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, error);
+            }
+
             // Get product info
             Product product = getProduct(orderProduct.getProductId());
 
@@ -53,7 +69,6 @@ public class ProductServiceImpl implements ProductService {
             double priceOfSingleProducts;
             double discount = 0;
 
-            System.out.println(product == null);
             noOfCartons = orderProduct.getOrderSize() / product.getCartonSize();
             noOfSingleProducts = orderProduct.getOrderSize() % product.getCartonSize();
 

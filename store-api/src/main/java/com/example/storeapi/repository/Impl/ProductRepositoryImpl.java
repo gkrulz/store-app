@@ -6,9 +6,11 @@ import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,7 +47,9 @@ public class ProductRepositoryImpl implements ProductRepository {
                         return t;
                     });
         } catch (Exception e) {
-            logger.error("Failed to retrieve the products ", e);
+            String error = "[Product] Failed to retrieve the products ";
+            logger.error(error, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, error);
         }
 
         return results;
@@ -75,7 +79,15 @@ public class ProductRepositoryImpl implements ProductRepository {
                         return t;
                     });
         } catch (Exception e) {
-            logger.error("Failed to retrieve the products ", e);
+            String error = "[Product] Failed to retrieve the product ";
+            logger.error(error, e);
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, error);
+        }
+
+        if (results.size() == 0) {
+            String error = "Product Not Found";
+            logger.error(error);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, error);
         }
 
         return results.get(0);
